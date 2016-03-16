@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "huawei", "huawei\huawei.vcxproj", "{6E2B43E5-2EFD-4141-AEA0-983344DD594B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_io", "_io\_io.vcxproj", "{005782D2-1C70-42B5-AC68-A226F5CC0B7C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E2B43E5-2EFD-4141-AEA0-983344DD594B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6E2B43E5-2EFD-4141-AEA0-983344DD594B}.Debug|Win32.Build.0 = Debug|Win32
+		{6E2B43E5-2EFD-4141-AEA0-983344DD594B}.Release|Win32.ActiveCfg = Release|Win32
+		{6E2B43E5-2EFD-4141-AEA0-983344DD594B}.Release|Win32.Build.0 = Release|Win32
+		{005782D2-1C70-42B5-AC68-A226F5CC0B7C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{005782D2-1C70-42B5-AC68-A226F5CC0B7C}.Debug|Win32.Build.0 = Debug|Win32
+		{005782D2-1C70-42B5-AC68-A226F5CC0B7C}.Release|Win32.ActiveCfg = Release|Win32
+		{005782D2-1C70-42B5-AC68-A226F5CC0B7C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+EndGlobal
