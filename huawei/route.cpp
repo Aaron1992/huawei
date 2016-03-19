@@ -1,20 +1,8 @@
 #include "route.h"
-#include "lib_record.h"
-#include <stdio.h>
 
-#include <string>
-#include <sstream>
-#include <vector>
-#include <algorithm>
-#include <time.h>
-#include <unordered_map>
-#include <set>
-
-#include "graph.h"
-#include "dijkstra.h"
 
 const int kMAX_NODES = 600;
-const int kMAX_KEEP = 80;
+const int kMAX_KEEP = 100;
 
 
 const bool debug = true;
@@ -78,6 +66,26 @@ int read_demand(char *demand, int &start, int &end, std::vector<int> &demand_nod
 }
 
 void search_route(char *topo[5000], int edge_num, char *demand){
+	int keep_max = 1000;
+	int last_cost = 100000;
+	int count = 0;
+	int cost = 0;
+	for (int i = 1; i != 0; i--){
+		cost = try_search(topo, edge_num, demand, keep_max);
+		if (cost == last_cost){
+			count++;
+		}
+		else
+		{
+			count = 0;
+		}
+		if (2 == count)break;
+		last_cost = cost;
+		keep_max *= 2;
+	}
+}
+
+int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
     unsigned short result[] = {2, 6, 3};//示例中的一个解
 	int v_start;
 	int v_end;
@@ -85,8 +93,10 @@ void search_route(char *topo[5000], int edge_num, char *demand){
 	unsigned int demand_vector[19];
 	static Graph graph =  Graph(kMAX_NODES);
 	static std::unordered_map<int, std::unordered_map<int, ShortPath>> m_dis;
+	static std::unordered_map<int, std::unordered_map<int, std::vector<vertex_t>>> m_route;
 	std::unordered_map<vertex_t, std::vector<ShortPath>> m_f, last_f;
 
+	// read graph
 	srand((unsigned)time(NULL));
 	std::vector<vertex_t> demand_nodes;
 	read_demand(demand, v_start, v_end, demand_nodes);
@@ -114,15 +124,20 @@ void search_route(char *topo[5000], int edge_num, char *demand){
 		std::vector<vertex_t> path = DijkstraGetShortestPathTo(vi, previous);
 		ShortPath s_path = ShortPath(min_distance[vi], path);
 		m_dis[v_start][vi] = s_path;
+		m_route[v_start][vi] = path;
 	}
 
 	for (auto vi : demand_nodes){
 		DijkstraComputePaths(vi, graph.adjacency_list, min_distance, previous);
 		for (auto vl : demand_nodes){
 			if (vl == vi) continue;
+			if (vl == 20){
+				int t = vl;
+			}
 			std::vector<vertex_t> path = DijkstraGetShortestPathTo(vl, previous);
 			ShortPath s_path = ShortPath(min_distance[vl], path);
 			m_dis[vi][vl] = s_path;
+			m_route[vi][vl] = path;
 		}
 	}
 
@@ -132,6 +147,7 @@ void search_route(char *topo[5000], int edge_num, char *demand){
 		std::vector<vertex_t> path = DijkstraGetShortestPathTo(v_end, previous);
 		ShortPath s_path = ShortPath(min_distance[v_end], path);
 		m_f[vi].push_back(s_path);
+		m_route[vi][v_end] = path;
 	}
 
 	// Start searching the best path
@@ -140,31 +156,39 @@ void search_route(char *topo[5000], int edge_num, char *demand){
 	for (int gen = 1; gen < demand_nodes.size(); gen++){
 		last_f = m_f;
 		m_f.clear();
-		if (debug)std::cout << "Gen:" << gen << std::endl; 
+		if (debug)std::cout << "Gen:" << gen << std::endl;
 		for (vertex_t vi : demand_nodes){
 			std::priority_queue<ShortPath, std::vector<ShortPath>, PathCompare> fvi_pqueue;
 			for (auto &it : last_f){
 				vl = it.first;
 				if (vi == vl) continue;
-				for (int i = it.second.size(); i !=0 ; i--){
-					if (confilct(m_dis[vi][vl], it.second[i-1]))
+				for (int i = it.second.size(); i != 0; i--){
+					if (confilct(m_dis[vi][vl], it.second[i - 1]))
 						continue;
-					temp = m_dis[vi][vl] + it.second[i-1];
-					if (count(temp, demand_vector, node_num)>= gen){
+					temp = m_dis[vi][vl] + it.second[i - 1];
+					if (count(temp, demand_vector, node_num) == gen){
 						fvi_pqueue.push(temp);
 					}
 				}
 			}
-			for (int i = 0; i<kMAX_KEEP; i++){
+			for (int i = 0; i<keep_max; i++){
 				if (fvi_pqueue.empty())break;
 				m_f[vi].push_back(fvi_pqueue.top());
 				fvi_pqueue.pop();
 			}
 		}
 		for (auto &path_list : m_f){
-			if (path_list.second.size() > kMAX_KEEP)
-				path_list.second.resize(kMAX_KEEP);
+			if (path_list.second.size() > keep_max)
+				path_list.second.resize(keep_max);
 		}
+		//for (auto test : m_f){
+		//	std::cout << test.first << " cost ";
+		//	for (int i = 0; i < test.second.size(); i++){
+		//		
+		//		std::cout << (test.second[i].bitmarker[0] + test.second[i].bitmarker[1]) << "|";
+		//	}
+		//	std::cout << std::endl;
+		//}
 	}
 
 
@@ -183,73 +207,55 @@ void search_route(char *topo[5000], int edge_num, char *demand){
 			}
 		}
 	}
-	for (int i = 0; i<kMAX_KEEP; i++){
+	for (int i = 0; i<keep_max; i++){
 		if (fvi_pqueue.empty())break;
 		m_f[v_start].push_back(fvi_pqueue.top());
 		fvi_pqueue.pop();
 	}
 
-	//last_f = m_f;
-	//m_f.clear();
-	//for (auto it : last_f){
-	//	vertex_t vl = it.first;
-	//	for (ShortPath s_path : it.second){
-	//		ShortPath temp = m_dis[v_start][vl] + s_path;
-	//		//int test = count_in(temp, demand_nodes);
-	//		if (is_loopless(temp) && count_in(temp, demand_nodes) >= demand_nodes.size()){
-	//			m_f[v_start].push_back(temp);
-	//		}
-	//	}
-	//}
-	//for (auto &path_list : m_f){
-	//	std::sort(path_list.second.begin(), path_list.second.end(), shorter);
-	//}
-	//for (auto &path_list : m_f){
-	//	std::sort(path_list.second.begin(), path_list.second.end(), shorter);
-	//}
 
+	std::vector<vertex_t> best_route; //路过的点
+	std::vector<vertex_t> best_tour ; //路过的边
 	
-	std::vector<vertex_t> best_tour ;
 	if (m_f[v_start].size() != 0){
-		std::vector<vertex_t> &best_route = m_f[v_start][0].path;
-		int s = v_start;
+		//std::vector<vertex_t> &best_route = m_f[v_start][0].;
+		auto order = m_f[v_start][0].order;
+		auto s = order[0];
+		for (auto t = order.begin() + 1; t != order.end(); t++){
+			for (int i = 1;i< m_route[s][*t].size();i++){
+				best_route.push_back(m_route[s][*t][i]);
+			}
+			int rank = 1;
+			for (int i = 0; i < demand_nodes.size();i++){
+				if (m_dis[i][*t].cost < m_dis[s][*t].cost) rank++;
+			}
+			std::cout << s << "->" << *t << " rank:" << rank << " cost:" << m_dis[s][*t].cost << std::endl;
+			s = *t;
+		}
+		s = v_start;
 		if (debug){
 			std::cout << "Cost:" << m_f[v_start][0].cost << std::endl;
 		}
-		for (auto t = best_route.begin() + 1; t != best_route.end(); t++){
+		for (auto t = best_route.begin() ; t != best_route.end(); t++){
 			best_tour.push_back(v_edge_t[s][*t]);
 			if (debug){
 				std::cout << *t << "->";
 			}
 			s = *t;
 		}
+		for (int i = 0; i < best_tour.size(); i++)
+			record_result(best_tour[i]);
+		return m_f[v_start][0].cost;
+
 	}
 
-    for (int i = 0; i < best_tour.size(); i++)
-		record_result(best_tour[i]);
+	return 0;
 }
 
 
-bool is_loopless(ShortPath s){
-	std::set<vertex_t> checked;
-	for (auto v : s.path){
-		const bool is_in = checked.find(v) != checked.end();
-		if (is_in)return false;
-		// not in checked, insert it
-		checked.insert(v);
-	}
-	return true;
-}
 
-int count_in(ShortPath s_path, std::vector<vertex_t> demand){
-	int count = 0;
-	for (auto v = s_path.path.begin(); v != s_path.path.end(); v++){
-		for (auto d : demand){
-			if (*v == d) count++;
-		}
-	}
-	return count;
-}
+
+
 
 
 bool shorter(ShortPath p1, ShortPath p2){

@@ -27,14 +27,20 @@ class ShortPath
 {
 public:
 	int cost;
-	std::vector<int> route;
-	std::vector<vertex_t> path;
+	vertex_t start;
 	unsigned int bitmarker[19];
+	std::vector<int> order;
 	ShortPath();
 	ShortPath(int arg_cost, std::vector<vertex_t> arg_path);
 	friend ShortPath operator+(const ShortPath &c1, const ShortPath &c2);
 };
 
+//记录下各点最短距离经过的边
+struct ShortRoute{
+	vertex_t start;
+	vertex_t end;
+	std::vector<vertex_t> route;
+};
 
 class PathCompare{
 	bool reverse;
@@ -62,6 +68,7 @@ public:
 	int size();
 };
 
+bool check(ShortPath path_frag, ShortPath long_path);
 bool confilct(ShortPath c1, ShortPath c2);
 int count(ShortPath c, const unsigned int demand_vector[], int node_num);
 
