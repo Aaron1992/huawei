@@ -219,6 +219,7 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 	
 	if (m_f[v_start].size() != 0){
 		//std::vector<vertex_t> &best_route = m_f[v_start][0].;
+		m_f[v_start][0].order.push_back(v_end);
 		auto order = m_f[v_start][0].order;
 		auto s = order[0];
 		for (auto t = order.begin() + 1; t != order.end(); t++){
@@ -246,7 +247,6 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 		for (int i = 0; i < best_tour.size(); i++)
 			record_result(best_tour[i]);
 		return m_f[v_start][0].cost;
-
 	}
 
 	return 0;
