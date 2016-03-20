@@ -2,7 +2,8 @@
 
 
 const int kMAX_NODES = 600;
-const int kMAX_KEEP = 100;
+const int kMAX_KEEP = 1000;
+const int kKEEP = 80;
 
 
 const bool debug = true;
@@ -66,7 +67,7 @@ int read_demand(char *demand, int &start, int &end, std::vector<int> &demand_nod
 }
 
 void search_route(char *topo[5000], int edge_num, char *demand){
-	int keep_max = 1000;
+	int keep_max = 100;
 	int last_cost = 100000;
 	int count = 0;
 	int cost = 0;
@@ -90,6 +91,7 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 	int v_start;
 	int v_end;
 	int node_num;
+	int test_count;
 	unsigned int demand_vector[19];
 	static Graph graph =  Graph(kMAX_NODES);
 	static std::unordered_map<int, std::unordered_map<int, ShortPath>> m_dis;
@@ -123,19 +125,21 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 	for (auto vi : demand_nodes){
 		std::vector<vertex_t> path = DijkstraGetShortestPathTo(vi, previous);
 		ShortPath s_path = ShortPath(min_distance[vi], path);
+
 		m_dis[v_start][vi] = s_path;
 		m_route[v_start][vi] = path;
 	}
-
+	test_count = 0;
 	for (auto vi : demand_nodes){
 		DijkstraComputePaths(vi, graph.adjacency_list, min_distance, previous);
 		for (auto vl : demand_nodes){
-			if (vl == vi) continue;
-			if (vl == 20){
-				int t = vl;
-			}
+			if (vl == vi) continue;// pass self
 			std::vector<vertex_t> path = DijkstraGetShortestPathTo(vl, previous);
 			ShortPath s_path = ShortPath(min_distance[vl], path);
+			if (count(s_path, demand_vector) != 1){
+				test_count++;
+				s_path.cost = INF;
+			}
 			m_dis[vi][vl] = s_path;
 			m_route[vi][vl] = path;
 		}
@@ -146,6 +150,10 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 		DijkstraComputePaths(vi, graph.adjacency_list, min_distance, previous);
 		std::vector<vertex_t> path = DijkstraGetShortestPathTo(v_end, previous);
 		ShortPath s_path = ShortPath(min_distance[v_end], path);
+		if (count(s_path, demand_vector) != 0){
+			test_count++;
+			s_path.cost = INF;
+		}
 		m_f[vi].push_back(s_path);
 		m_route[vi][v_end] = path;
 	}
@@ -154,6 +162,8 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 	ShortPath temp;
 	vertex_t vl;
 	for (int gen = 1; gen < demand_nodes.size(); gen++){
+		keep_max = gen * kKEEP;
+		if (keep_max > kMAX_KEEP) keep_max = kMAX_KEEP;
 		last_f = m_f;
 		m_f.clear();
 		if (debug)std::cout << "Gen:" << gen << std::endl;
@@ -166,7 +176,7 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 					if (confilct(m_dis[vi][vl], it.second[i - 1]))
 						continue;
 					temp = m_dis[vi][vl] + it.second[i - 1];
-					if (count(temp, demand_vector, node_num) == gen){
+					if (count(temp, demand_vector) == gen){
 						fvi_pqueue.push(temp);
 					}
 				}
@@ -202,7 +212,7 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 			if (confilct(m_dis[v_start][vl], it.second[i]))
 				continue;
 			temp = m_dis[v_start][vl] + it.second[i];
-			if (count(temp, demand_vector, node_num) >= demand_nodes.size()){
+			if (count(temp, demand_vector) >= demand_nodes.size()){
 				fvi_pqueue.push(temp);
 			}
 		}
@@ -226,11 +236,11 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 			for (int i = 1;i< m_route[s][*t].size();i++){
 				best_route.push_back(m_route[s][*t][i]);
 			}
-			int rank = 1;
+			/*int rank = 1;
 			for (int i = 0; i < demand_nodes.size();i++){
 				if (m_dis[i][*t].cost < m_dis[s][*t].cost) rank++;
 			}
-			std::cout << s << "->" << *t << " rank:" << rank << " cost:" << m_dis[s][*t].cost << std::endl;
+			std::cout << s << "->" << *t << " rank:" << rank << " cost:" << m_dis[s][*t].cost << std::endl;*/
 			s = *t;
 		}
 		s = v_start;

@@ -6,7 +6,7 @@
 #include <map>
 #include <string>
 #include <limits>
-
+#define INF 10000000
 extern int NODE_NUM;
 typedef int vertex_t;
 typedef double weight_t;
@@ -70,7 +70,7 @@ public:
 
 bool check(ShortPath path_frag, ShortPath long_path);
 bool confilct(ShortPath c1, ShortPath c2);
-int count(ShortPath c, const unsigned int demand_vector[], int node_num);
+int count(ShortPath c, const unsigned int demand_vector[]);
 
 
 #endif

@@ -88,11 +88,11 @@ bool check(ShortPath path_frag, ShortPath long_path){
 }
 
 
-int count(ShortPath c, const unsigned int demand_vector[], int node_num){
+int count(ShortPath c, const unsigned int demand_vector[]){
 	unsigned int sign_num = 0;
 	unsigned int x;
 	int count;
-	for (int i = 0; i <= node_num / 32; i++){
+	for (int i = 0; i <= NODE_NUM / 32; i++){
 		x = c.bitmarker[i] & demand_vector[i];
 		for (count = 0; x; count++)
 			x &= x - 1;
