@@ -10,6 +10,7 @@
 extern int NODE_NUM;
 typedef int vertex_t;
 typedef double weight_t;
+
 struct neighbor {
 	int id;
 	vertex_t target;

@@ -22,4 +22,8 @@ void DijkstraComputePaths(vertex_t source,
 
 std::vector<vertex_t> DijkstraGetShortestPathTo(
 	vertex_t vertex, const std::vector<vertex_t> &previous);
+std::vector<vertex_t> shortest_path(Graph &graph, vertex_t source, vertex_t sink);
+
+int path_length(Graph &graph, std::vector<vertex_t> path);
+std::vector<std::vector<vertex_t>> k_shortest_path(Graph &graph, vertex_t source, vertex_t sink, int k_number);
 #endif

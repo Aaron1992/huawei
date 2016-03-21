@@ -2,9 +2,9 @@
 
 
 const int kMAX_NODES = 600;
-const int kMAX_KEEP = 1000;
-const int kKEEP = 80;
-
+const int kMAX_KEEP = 2000;
+const int kKEEP = 100;
+const int K = 2; //k shortest path
 
 const bool debug = true;
 static int v_edge_t[kMAX_NODES][kMAX_NODES] = { -1 };
@@ -119,12 +119,17 @@ int try_search(char *topo[5000], int edge_num, char *demand, int keep_max){
 	graph.adjacency_list.resize(node_num);
 	
 	// Matirix to save shortest path between nodes in {start and demand_nodes}
-	std::vector<weight_t> min_distance;
+	std::vector<weight_t> min_distance; // source to sink distance 
 	std::vector<vertex_t> previous;
-	DijkstraComputePaths(v_start, graph.adjacency_list, min_distance, previous);
+	//std::vector<int> test_dij = shortest_path(graph, 14, 197);
+	//int test_dij_length = path_length(graph, test_dij);
+	auto test = k_shortest_path(graph, 10, 8, 2);
+		DijkstraComputePaths(v_start, graph.adjacency_list, min_distance, previous);
 	for (auto vi : demand_nodes){
-		std::vector<vertex_t> path = DijkstraGetShortestPathTo(vi, previous);
-		ShortPath s_path = ShortPath(min_distance[vi], path);
+		//std::vector<vertex_t> path = DijkstraGetShortestPathTo(vi, previous);
+		std::vector<vertex_t> path = shortest_path(graph, v_start, vi);
+		//ShortPath s_path = ShortPath(min_distance[vi], path);
+		ShortPath s_path = ShortPath(path_length(graph, path), path);
 
 		m_dis[v_start][vi] = s_path;
 		m_route[v_start][vi] = path;
