@@ -65,17 +65,25 @@ std::vector<vertex_t> shortest_path(Graph &graph, vertex_t source, vertex_t sink
 	std::vector<vertex_t> previous;
 	DijkstraComputePaths(source, graph.adjacency_list, min_distance, previous);
 	std::vector<vertex_t> path = DijkstraGetShortestPathTo(sink, previous);
-	return path;
+	if (path.size() == 1) path.clear();
+	return path;//return one node means no route
 }
 
 int path_length(Graph &graph, std::vector<vertex_t> path){
 	int length = 0;
+	bool found;
+	if (path.size() <= 1) return INF;
 	for (int i = 0; i != (path.size() - 1); i++){
+		found = false;
 		std::vector<neighbor> neighbors = graph.adjacency_list[path[i]];
 		for (auto neighbor : neighbors){
-			if (neighbor.target == path[i + 1])
+			if (neighbor.target == path[i + 1]){
 				length += neighbor.weight;
+				found = true;
+			}
 		}
+		if (!found)
+			length += INF;
 	}
 	return length;
 }
@@ -107,6 +115,11 @@ std::vector<std::vector<vertex_t>> k_shortest_path(Graph &graph,vertex_t source,
 	// Determine the shortest path from the source to the sink.
 	std::vector<std::vector<vertex_t>> result_list;
 	result_list.push_back(shortest_path(graph, source, sink));
+	if (result_list[0].size() == 0){
+		result_list.clear();
+			return result_list;//return one node means no route
+	}
+
 	// Initialize the heap to store the potential kth shortest path.
 	std::vector<std::pair<std::vector<vertex_t>, int>> candidates;
 	std::vector<link> removed_links;
@@ -115,7 +128,8 @@ std::vector<std::vector<vertex_t>> k_shortest_path(Graph &graph,vertex_t source,
 	for (int k = 1; k != k_number; k++){
 		// The spur node ranges from the first node to the next to last node in the previous k-shortest path.
 		for (int i = 0; i != result_list[k - 1].size() - 2; i++){//TODO: mayby -2?
-
+			removed_links.clear();
+			removed_nodes.clear();
 			// Spur node is retrieved from the previous k-shortest path, k − 1.
 			vertex_t spur_node = result_list[k - 1][i];
 			// The sequence of nodes from the source to the spur node of the previous k-shortest path.
@@ -124,9 +138,15 @@ std::vector<std::vector<vertex_t>> k_shortest_path(Graph &graph,vertex_t source,
 			for (auto path : result_list){
 				// Remove the links that are part of the previous shortest paths which share the same root path.
 				bool equal = true;
-				for (int temp = 0; temp < i; temp++){
-					if (path[temp] != root_path[temp])
-						equal = false;
+				if (path.size() < i){
+					equal = false;
+				}
+				else
+				{
+					for (int temp = 0; temp < i; temp++){
+						if (path[temp] != root_path[temp])
+							equal = false;
+					}
 				}
 				if (equal){
 					//remove i,i+1;
@@ -154,14 +174,10 @@ std::vector<std::vector<vertex_t>> k_shortest_path(Graph &graph,vertex_t source,
 
 			// Calculate the spur path from the spur node to the sink.
 			std::vector<vertex_t> spur_path = shortest_path(graph, spur_node, sink);
+			if (spur_path.size() == 1)break;//return one node means no route
 
 			// Entire path is made up of the root path and spur path.
-			std::vector<vertex_t> total_path;
-			total_path.reserve(root_path.size() + spur_path.size());
-			total_path.insert(total_path.end(), root_path.begin(), root_path.end());
-			total_path.insert(total_path.end(), spur_path.begin(), spur_path.end());
-			// Add the potential k-shortest path to the heap.
-			candidates.push_back(std::make_pair(total_path, path_length(graph, total_path)));
+
 
 			// Add back the edges and nodes that were removed from the graph.
 			for (auto link : removed_links){
@@ -170,14 +186,21 @@ std::vector<std::vector<vertex_t>> k_shortest_path(Graph &graph,vertex_t source,
 			for (auto node_neihbor : removed_nodes){
 				graph.adjacency_list[node_neihbor.node_id] = node_neihbor.neighors;
 			}
+			std::vector<vertex_t> total_path;
+			total_path.reserve(root_path.size() + spur_path.size());
+			total_path.insert(total_path.end(), root_path.begin(), root_path.end());
+			total_path.insert(total_path.end(), spur_path.begin(), spur_path.end());
+			if (path_length(graph, total_path) < INF && total_path.size() != 1)
+			// Add the potential k-shortest path to the heap.
+				candidates.push_back(std::make_pair(total_path, path_length(graph, total_path)));
 
-			if (candidates.size() == 0)
-				// This handles the case of there being no spur paths, or no spur paths left.
-				// This could happen if the spur paths have already been exhausted (added to A), 
-				// or there are no spur paths at all - such as when both the source and sink vertices 
-				// lie along a "dead end".
-				break;
 		}
+		if (candidates.size() == 0)
+			// This handles the case of there being no spur paths, or no spur paths left.
+			// This could happen if the spur paths have already been exhausted (added to A), 
+			// or there are no spur paths at all - such as when both the source and sink vertices 
+			// lie along a "dead end".
+			break;
 		// Sort the potential k-shortest paths by cost.
 		std::sort(candidates.begin(), candidates.end(), less_than_path());
 		// Add the lowest cost path becomes the k-shortest path.

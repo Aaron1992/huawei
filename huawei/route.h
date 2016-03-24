@@ -15,7 +15,7 @@
 #include "dijkstra.h"
 
 
-int try_search(char *topo[5000], int edge_num, char *demand, int keep_max);
+bool try_search(Graph, int node_num, char *demand, int keep_max, int k);
 void search_route(char *graph[5000], int edge_num, char *condition);
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
 std::vector<std::string> split(const std::string &s, char delim);

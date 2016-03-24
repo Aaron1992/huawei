@@ -29,6 +29,7 @@ ShortPath::ShortPath(int arg_cost, std::vector<vertex_t> arg_path){
 	}
 	start = arg_path[0];
 	order.push_back(start);
+	path = arg_path;
 	for (unsigned int &b : bitmarker) b = 0;
 	for (int i = 1; i < arg_path.size(); i++){
 		bitmarker[arg_path[i] / 32] = bitmarker[arg_path[i] / 32] | (1 << (arg_path[i] % 32));
@@ -43,9 +44,9 @@ ShortPath operator+(const ShortPath &c1, const ShortPath &c2){
 		p.bitmarker[i] = c1.bitmarker[i] | c2.bitmarker[i];
 	}
 	p.start = c1.start;
-	p.order.reserve(c1.order.size() + c2.order.size()); // preallocate memory
-	p.order.insert(p.order.end(), c1.order.begin(), c1.order.end());
-	p.order.insert(p.order.end(), c2.order.begin(), c2.order.end());
+	p.path.reserve(c1.path.size() + c2.path.size() - 1);
+	p.path.insert(p.path.end(), c1.path.begin(), c1.path.end());
+	p.path.insert(p.path.end(), c2.path.begin() + 1, c2.path.end());
 	return p;
 }
 

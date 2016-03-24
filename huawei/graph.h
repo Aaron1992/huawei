@@ -30,6 +30,7 @@ public:
 	int cost;
 	vertex_t start;
 	unsigned int bitmarker[19];
+	std::vector<vertex_t> path;
 	std::vector<int> order;
 	ShortPath();
 	ShortPath(int arg_cost, std::vector<vertex_t> arg_path);
